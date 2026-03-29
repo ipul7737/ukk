@@ -81,8 +81,7 @@
             </button>
 
             <div class="text-center mt-3">
-                <a href="{{ route('register') }}">Daftar</a> |
-                <a href="{{ route('password.form') }}">Ganti Password</a>
+                <a href="{{ route('register') }}">Daftar</a>
             </div>
 
         </form>
@@ -96,4 +95,4 @@
     </div>
 
 </body>
-</html> 
+</html>
