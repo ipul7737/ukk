@@ -7,6 +7,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\UserController;
+use App\Models\Book;
+use App\Models\Loan;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,7 +42,7 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| DASHBOARD
+| ADMIN DASHBOARD
 |--------------------------------------------------------------------------
 */
 
@@ -81,25 +83,55 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
 Route::middleware(['auth', 'role:murid'])->prefix('murid')->name('murid.')->group(function () {
 
-    // Dashboard
+    // Dashboard Murid
     Route::get('/dashboard', function () {
-        return view('murid.dashboard');
+        $user = auth()->user();
+
+        $totalDipinjam = Loan::where('user_id', $user->id)
+            ->where('status', 'dipinjam')->count();
+
+        $totalDikembalikan = Loan::where('user_id', $user->id)
+            ->where('status', 'kembali')->count();
+
+        $totalTerlambat = Loan::where('user_id', $user->id)
+            ->where('status', 'dipinjam')
+            ->where('due_date', '<', now())->count();
+
+        $peminjamanAktif = Loan::with('book')
+            ->where('user_id', $user->id)
+            ->where('status', 'dipinjam')
+            ->latest()->get();
+
+        $bukuTerbaru = Book::latest()->take(5)->get();
+
+        return view('murid.dashboard', compact(
+            'totalDipinjam',
+            'totalDikembalikan',
+            'totalTerlambat',
+            'peminjamanAktif',
+            'bukuTerbaru'
+        ));
     })->name('dashboard');
 
-    // Daftar Buku
-    Route::get('/buku', [BookController::class, 'index'])->name('buku');
-
-    // Form Pinjam Buku
+    // Halaman Pinjam Buku (menampilkan daftar buku)
     Route::get('/pinjam', function () {
-        return view('murid.pinjam');
-    })->name('pinjam.form');
+        $books = Book::where('stok', '>', 0)->get();
+        return view('murid.pinjam', compact('books'));
+    })->name('pinjam');
 
-    // Proses Pinjam
-    Route::post('/pinjam/{book}', [LoanController::class, 'store'])->name('pinjam');
+    // Proses Pinjam Buku
+    Route::post('/pinjam/{book}', [LoanController::class, 'store'])->name('pinjam.store');
 
-    // Riwayat Peminjaman
-    Route::get('/peminjaman-saya', [LoanController::class, 'myLoans'])->name('myloans');
+    // Halaman Pengembalian (buku yang sedang dipinjam)
+    Route::get('/pengembalian', [LoanController::class, 'pengembalian'])->name('pengembalian');
+
+    // Proses Kembalikan Buku
+    Route::post('/kembalikan/{id}', [LoanController::class, 'kembalikanMurid'])->name('kembalikan');
+
+    // Riwayat Peminjaman Murid
+    Route::get('/riwayat', [LoanController::class, 'riwayatMurid'])->name('riwayat');
 });
+
 /*
 |--------------------------------------------------------------------------
 | PROFILE

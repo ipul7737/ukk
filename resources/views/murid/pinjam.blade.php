@@ -5,7 +5,7 @@
 
     {{-- Judul --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold mb-0">Riwayat Peminjaman</h3>
+        <h3 class="fw-bold mb-0">Pinjam Buku</h3>
         <a href="{{ route('murid.dashboard') }}" class="btn btn-secondary btn-sm">
             ← Kembali
         </a>
@@ -31,9 +31,9 @@
     <div class="card shadow-sm border-0 rounded-4">
         <div class="card-body p-4">
 
-            <h5 class="fw-semibold mb-3">Daftar Riwayat Peminjaman</h5>
+            <h5 class="fw-semibold mb-3">Daftar Buku Tersedia</h5>
 
-            @if(isset($loans) && $loans->count() > 0)
+            @if(isset($books) && $books->count() > 0)
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead class="table-primary">
@@ -41,42 +41,37 @@
                                 <th>No</th>
                                 <th>Judul Buku</th>
                                 <th>Penulis</th>
-                                <th>Tanggal Pinjam</th>
-                                <th>Tanggal Kembali</th>
-                                <th>Denda</th>
-                                <th>Status</th>
+                                <th>Kategori</th>
+                                <th>Stok</th>
+                                <th class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($loans as $index => $loan)
+                            @foreach($books as $index => $book)
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
-                                    <td class="fw-semibold">{{ $loan->book->judul ?? '-' }}</td>
-                                    <td>{{ $loan->book->penulis ?? '-' }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($loan->tanggal_pinjam)->format('d/m/Y') }}</td>
+                                    <td class="fw-semibold">{{ $book->judul }}</td>
+                                    <td>{{ $book->penulis ?? '-' }}</td>
+                                    <td>{{ $book->kategori ?? '-' }}</td>
                                     <td>
-                                        @if($loan->tanggal_kembali)
-                                            {{ \Carbon\Carbon::parse($loan->tanggal_kembali)->format('d/m/Y') }}
+                                        @if($book->stok > 0)
+                                            <span class="badge bg-success">Tersedia ({{ $book->stok }})</span>
                                         @else
-                                            <span class="text-muted">Belum dikembalikan</span>
+                                            <span class="badge bg-danger">Habis</span>
                                         @endif
                                     </td>
-                                    <td>
-                                        @if($loan->denda > 0)
-                                            <span class="text-danger fw-semibold">
-                                                Rp {{ number_format($loan->denda, 0, ',', '.') }}
-                                            </span>
+                                    <td class="text-center">
+                                        @if($book->stok > 0)
+                                            <form action="{{ route('murid.pinjam.store', $book->id) }}" method="POST" onsubmit="return confirm('Yakin mau pinjam buku ini?')">
+                                                @csrf
+                                                <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3">
+                                                    Pinjam
+                                                </button>
+                                            </form>
                                         @else
-                                            <span class="text-success">Tidak ada</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if($loan->status == 'kembali')
-                                            <span class="badge bg-success">Dikembalikan</span>
-                                        @elseif($loan->status == 'dipinjam' && \Carbon\Carbon::now()->greaterThan($loan->due_date))
-                                            <span class="badge bg-danger">Terlambat</span>
-                                        @else
-                                            <span class="badge bg-warning text-dark">Dipinjam</span>
+                                            <button class="btn btn-secondary btn-sm rounded-pill px-3" disabled>
+                                                Tidak Tersedia
+                                            </button>
                                         @endif
                                     </td>
                                 </tr>
@@ -86,7 +81,7 @@
                 </div>
             @else
                 <div class="alert alert-warning mb-0">
-                    Belum ada riwayat peminjaman.
+                    Belum ada buku yang tersedia untuk dipinjam.
                 </div>
             @endif
 

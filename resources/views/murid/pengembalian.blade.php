@@ -5,7 +5,7 @@
 
     {{-- Judul --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold mb-0">Riwayat Peminjaman</h3>
+        <h3 class="fw-bold mb-0">Pengembalian Buku</h3>
         <a href="{{ route('murid.dashboard') }}" class="btn btn-secondary btn-sm">
             ← Kembali
         </a>
@@ -31,7 +31,7 @@
     <div class="card shadow-sm border-0 rounded-4">
         <div class="card-body p-4">
 
-            <h5 class="fw-semibold mb-3">Daftar Riwayat Peminjaman</h5>
+            <h5 class="fw-semibold mb-3">Daftar Buku Sedang Dipinjam</h5>
 
             @if(isset($loans) && $loans->count() > 0)
                 <div class="table-responsive">
@@ -42,9 +42,9 @@
                                 <th>Judul Buku</th>
                                 <th>Penulis</th>
                                 <th>Tanggal Pinjam</th>
-                                <th>Tanggal Kembali</th>
-                                <th>Denda</th>
+                                <th>Tanggal Jatuh Tempo</th>
                                 <th>Status</th>
+                                <th class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -55,29 +55,28 @@
                                     <td>{{ $loan->book->penulis ?? '-' }}</td>
                                     <td>{{ \Carbon\Carbon::parse($loan->tanggal_pinjam)->format('d/m/Y') }}</td>
                                     <td>
-                                        @if($loan->tanggal_kembali)
-                                            {{ \Carbon\Carbon::parse($loan->tanggal_kembali)->format('d/m/Y') }}
-                                        @else
-                                            <span class="text-muted">Belum dikembalikan</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if($loan->denda > 0)
+                                        @if(\Carbon\Carbon::now()->greaterThan($loan->due_date))
                                             <span class="text-danger fw-semibold">
-                                                Rp {{ number_format($loan->denda, 0, ',', '.') }}
+                                                {{ \Carbon\Carbon::parse($loan->due_date)->format('d/m/Y') }}
                                             </span>
                                         @else
-                                            <span class="text-success">Tidak ada</span>
+                                            {{ \Carbon\Carbon::parse($loan->due_date)->format('d/m/Y') }}
                                         @endif
                                     </td>
                                     <td>
-                                        @if($loan->status == 'kembali')
-                                            <span class="badge bg-success">Dikembalikan</span>
-                                        @elseif($loan->status == 'dipinjam' && \Carbon\Carbon::now()->greaterThan($loan->due_date))
+                                        @if(\Carbon\Carbon::now()->greaterThan($loan->due_date))
                                             <span class="badge bg-danger">Terlambat</span>
                                         @else
                                             <span class="badge bg-warning text-dark">Dipinjam</span>
                                         @endif
+                                    </td>
+                                    <td class="text-center">
+                                        <form action="{{ route('murid.kembalikan', $loan->id) }}" method="POST" onsubmit="return confirm('Yakin mau kembalikan buku ini?')">
+                                            @csrf
+                                            <button type="submit" class="btn btn-danger btn-sm rounded-pill px-3">
+                                                Kembalikan
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                             @endforeach
@@ -86,7 +85,7 @@
                 </div>
             @else
                 <div class="alert alert-warning mb-0">
-                    Belum ada riwayat peminjaman.
+                    Tidak ada buku yang sedang dipinjam.
                 </div>
             @endif
 

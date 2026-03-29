@@ -15,22 +15,22 @@ class LoanController extends Controller
     {
         // cek stok
         if ($book->stok <= 0) {
-            return back()->with('error','Buku tidak tersedia');
+            return back()->with('error', 'Buku tidak tersedia');
         }
 
         Loan::create([
-            'user_id' => Auth::id(),
-            'book_id' => $book->id,
+            'user_id'       => Auth::id(),
+            'book_id'       => $book->id,
             'tanggal_pinjam' => now(),
-            'due_date' => now()->addDays(3),
-            'status' => 'dipinjam',
-            'denda' => 0
+            'due_date'      => now()->addDays(3),
+            'status'        => 'dipinjam',
+            'denda'         => 0
         ]);
 
         // kurangi stok
         $book->decrement('stok');
 
-        return back()->with('success','Buku berhasil dipinjam');
+        return back()->with('success', 'Buku berhasil dipinjam');
     }
 
 
@@ -39,69 +39,125 @@ class LoanController extends Controller
     {
         $search = $request->search;
 
-        $loans = Loan::with(['user','book'])
-        ->when($search, function($query) use ($search){
-
-            $query->whereHas('user', function($q) use ($search){
-                $q->where('name','like',"%$search%");
+        $loans = Loan::with(['user', 'book'])
+            ->when($search, function ($query) use ($search) {
+                $query->whereHas('user', function ($q) use ($search) {
+                    $q->where('name', 'like', "%$search%");
+                })
+                ->orWhereHas('book', function ($q) use ($search) {
+                    $q->where('judul', 'like', "%$search%");
+                });
             })
-
-            ->orWhereHas('book', function($q) use ($search){
-                $q->where('judul','like',"%$search%");
-            });
-
-        })
-        ->latest()
-        ->get();
+            ->latest()
+            ->get();
 
         return view('admin.peminjaman.index', compact('loans'));
     }
 
 
-    // PENGEMBALIAN BUKU
-public function kembalikan($id)
+    // PENGEMBALIAN BUKU (ADMIN)
+    public function kembalikan($id)
     {
         $loan = Loan::findOrFail($id);
         $book = Book::find($loan->book_id);
         $today = now();
         $denda = 0;
+
         if ($today->greaterThan($loan->due_date)) {
             $days = $today->diffInDays($loan->due_date);
             $denda = $days * 1000;
         }
+
         $loan->update([
             'tanggal_kembali' => $today,
-            'denda' => $denda,
-            'status' => 'kembali'
+            'denda'           => $denda,
+            'status'          => 'kembali'
         ]);
+
         if ($book) {
             $book->increment('stok');
         }
+
         return back()->with('success', 'Buku berhasil dikembalikan');
-            // HAPUS semua baris di bawah return yang lama
-        }
+    }
 
 
     // PEMINJAMAN SAYA (MURID)
     public function myLoans()
     {
         $loans = Loan::with('book')
-        ->where('user_id', Auth::id())
-        ->get();
+            ->where('user_id', Auth::id())
+            ->get();
 
-        return view('loans.my', compact('loans'));
+        return view('murid.pinjam', compact('loans'));
     }
 
 
-    // RIWAYAT PENGEMBALIAN
+    // RIWAYAT PENGEMBALIAN (ADMIN)
     public function riwayat()
     {
-        $loans = Loan::with(['user','book'])
-        ->where('status','kembali')
-        ->latest()
-        ->get();
+        $loans = Loan::with(['user', 'book'])
+            ->where('status', 'kembali')
+            ->latest()
+            ->get();
 
         return view('admin.riwayat.index', compact('loans'));
     }
 
+
+    // HALAMAN PENGEMBALIAN (MURID) - buku yang sedang dipinjam
+    public function pengembalian()
+    {
+        $loans = Loan::with('book')
+            ->where('user_id', Auth::id())
+            ->where('status', 'dipinjam')
+            ->get();
+
+        return view('murid.pengembalian', compact('loans'));
+    }
+
+
+    // PROSES KEMBALIKAN BUKU (MURID)
+    public function kembalikanMurid($id)
+    {
+        $loan = Loan::findOrFail($id);
+
+        // Pastikan loan milik user yang login
+        if ($loan->user_id !== Auth::id()) {
+            return back()->with('error', 'Akses ditolak');
+        }
+
+        $book = Book::find($loan->book_id);
+        $today = now();
+        $denda = 0;
+
+        if ($today->greaterThan($loan->due_date)) {
+            $days = $today->diffInDays($loan->due_date);
+            $denda = $days * 1000;
+        }
+
+        $loan->update([
+            'tanggal_kembali' => $today,
+            'denda'           => $denda,
+            'status'          => 'kembali'
+        ]);
+
+        if ($book) {
+            $book->increment('stok');
+        }
+
+        return back()->with('success', 'Buku berhasil dikembalikan');
+    }
+
+
+    // RIWAYAT PEMINJAMAN (MURID)
+    public function riwayatMurid()
+    {
+        $loans = Loan::with('book')
+            ->where('user_id', Auth::id())
+            ->latest()
+            ->get();
+
+        return view('murid.riwayat', compact('loans'));
+    }
 }

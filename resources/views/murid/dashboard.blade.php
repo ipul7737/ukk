@@ -38,7 +38,7 @@
     <div class="card shadow-sm mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <strong>Peminjaman Aktif</strong>
-            <a href="{{ route('murid.myloans') }}" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
+            <a href="{{ route('murid.pengembalian') }}" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
         </div>
         <div class="card-body p-0">
             <table class="table table-hover mb-0">
@@ -46,7 +46,7 @@
                     <tr>
                         <th>Judul Buku</th>
                         <th>Tanggal Pinjam</th>
-                        <th>Tanggal Kembali</th>
+                        <th>Tanggal Jatuh Tempo</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -55,9 +55,9 @@
                     <tr>
                         <td>{{ $loan->book->judul ?? '-' }}</td>
                         <td>{{ \Carbon\Carbon::parse($loan->tanggal_pinjam)->format('d M Y') }}</td>
-                        <td>{{ \Carbon\Carbon::parse($loan->tanggal_kembali)->format('d M Y') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($loan->due_date)->format('d M Y') }}</td>
                         <td>
-                            @if(\Carbon\Carbon::parse($loan->tanggal_kembali)->isPast())
+                            @if(\Carbon\Carbon::now()->greaterThan($loan->due_date))
                                 <span class="badge bg-danger">Terlambat</span>
                             @else
                                 <span class="badge bg-success">Aktif</span>
@@ -75,10 +75,10 @@
     </div>
 
     {{-- BUKU TERBARU --}}
-    <div class="card shadow-sm">
+    <div class="card shadow-sm mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <strong>Buku Terbaru</strong>
-            <a href="{{ route('murid.buku') }}" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
+            <a href="{{ route('murid.pinjam') }}" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
         </div>
         <div class="card-body p-0">
             <table class="table table-hover mb-0">
@@ -92,8 +92,8 @@
                 <tbody>
                     @forelse($bukuTerbaru ?? [] as $buku)
                     <tr>
-                        <td>{{ $buku->judul }}</td>
-                        <td>{{ $buku->pengarang ?? '-' }}</td>
+                        <td class="fw-semibold">{{ $buku->judul ?? '-' }}</td>
+                        <td>{{ $buku->penulis ?? '-' }}</td>
                         <td>
                             @if($buku->stok > 0)
                                 <span class="badge bg-success">Tersedia ({{ $buku->stok }})</span>
@@ -111,6 +111,7 @@
             </table>
         </div>
     </div>
+
 </div>
 
 @endsection

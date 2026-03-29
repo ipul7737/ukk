@@ -35,7 +35,7 @@ table {
                         <th>NISN</th>
                         <th>Buku</th>
                         <th>Tanggal Pinjam</th>
-                        <th>Due Date</th>
+                        <th>Tanggal tenggat</th>
                         <th>Tanggal Kembali</th>
                         <th>Denda</th>
                         <th>Status</th>

@@ -17,6 +17,11 @@ class BookController extends Controller
         $query->where('judul', 'like', "%{$search}%");
         })->get();
         return view('admin.books.index', compact('books','search'));
+
+        if (auth()->user()->role === 'murid') {
+        return view('murid.books', compact('books', 'search'));
+        }
+        return view('admin.books.index', compact('books', 'search'));
     }
 
     /**

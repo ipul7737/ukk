@@ -103,24 +103,23 @@ body {
                 </li>
 
                 <li>
-                    <a href="{{ route('murid.buku') }}"
-                       class="nav-link {{ request()->routeIs('murid.buku') ? 'active' : '' }}">
+                    <a href="{{ route('murid.pinjam') }}"
+                       class="nav-link {{ request()->routeIs('murid.pinjam') ? 'active' : '' }}">
                        <i class="bi-book-half"></i>
-                       Daftar Buku
+                       Peminjaman Buku
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('murid.pengembalian') }}"
+                       class="nav-link {{ request()->routeIs('murid.pengembalian') ? 'active' : '' }}">
+                       <i class="bi-book-half"></i>
+                       Pengembalian Buku
                     </a>
                 </li>
 
                 <li>
-                    <a href="{{ route('murid.pinjam.form') }}"
-                       class="nav-link {{ request()->routeIs('murid.pinjam.form') ? 'active' : '' }}">
-                       <i class="bi-plus-square"></i>
-                       Pinjam Buku
-                    </a>
-                </li>
-
-                <li>
-                    <a href="{{ route('murid.myloans') }}"
-                       class="nav-link {{ request()->routeIs('murid.myloans') ? 'active' : '' }}">
+                    <a href="{{ route('murid.riwayat') }}"
+                       class="nav-link {{ request()->routeIs('murid.riwayat') ? 'active' : '' }}">
                        <i class="bi-clock-history"></i>
                        Riwayat Peminjaman
                     </a>
